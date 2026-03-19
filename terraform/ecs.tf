@@ -37,4 +37,38 @@ resource "aws_ecs_task_definition" "app" {
             }
         }
     ])
+}
 
+resource "aws_security_group" "ecs_service" {
+    name = "${var.project_name}-sg"
+    vpc_id = data.aws_vpc.default.id
+
+    ingress {
+        from_port = 5000
+        to_port = 5000
+        protocol = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+
+    egress {
+        from_port = 0
+        to_port = 0
+        protocol = "-1"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+}
+
+resource "aws_ecs_service" "app" {
+    name = "${var.project_name}-service"
+    cluster = aws_ecs_cluster.main.id
+    task_definition = aws_ecs_task_definition.app.arn
+
+    launch_type = "FARGATE"
+    desired_count = 1
+
+    network_configuration {
+        subnets = data.aws_subnet.default.ids
+        security_groups = [aws_security_group.ecs_service.id]
+        assign_public_ip = true
+    }
+}
