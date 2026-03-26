@@ -20,7 +20,7 @@ resource "aws_ecs_task_definition" "app" {
         {
             name = "flask"
             image = "${aws_ecr_repository.app.repository_url}:latest"
-            port_mappings = [
+            portMappings = [
                 {
                     container_port = 5000
                     protocol = "tcp"
@@ -58,17 +58,18 @@ resource "aws_security_group" "ecs_service" {
     }
 }
 
-resource "aws_ecs_service" "app" {
-    name = "${var.project_name}-service"
-    cluster = aws_ecs_cluster.main.id
-    task_definition = aws_ecs_task_definition.app.arn
-
-    launch_type = "FARGATE"
-    desired_count = 1
-
-    network_configuration {
-        subnets = data.aws_subnet.default.ids
-        security_groups = [aws_security_group.ecs_service.id]
-        assign_public_ip = true
-    }
-}
+# フェーズ2（docker push後）に解除
+# resource "aws_ecs_service" "app" {
+#     name = "${var.project_name}-service"
+#     cluster = aws_ecs_cluster.main.id
+#     task_definition = aws_ecs_task_definition.app.arn
+#
+#     launch_type = "FARGATE"
+#     desired_count = 1
+#
+#     network_configuration {
+#         subnets = data.aws_subnets.default.ids
+#         security_groups = [aws_security_group.ecs_service.id]
+#         assign_public_ip = true
+#     }
+# }
