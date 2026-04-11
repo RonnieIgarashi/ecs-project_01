@@ -7,11 +7,11 @@
     "executionRoleArn": "arn:aws:iam::335142514101:role/ecsTaskExecutionRole",
     "containerDefinitions": [
         {
-            "name": "flask",
+            "name": "django",
             "image": "335142514101.dkr.ecr.ap-northeast-1.amazonaws.com/ecs-project-01:latest",
             "portMappings": [
                 {
-                "containerPort": 5000,
+                "containerPort": 8000,
                 "protocol": "tcp"
                 }
             ],

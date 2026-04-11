@@ -18,11 +18,11 @@ resource "aws_ecs_task_definition" "app" {
 
     container_definitions = jsonencode([
         {
-            name = "flask"
+            name = "django"
             image = "${aws_ecr_repository.app.repository_url}:latest"
             portMappings = [
                 {
-                    container_port = 5000
+                    containerPort = 8000
                     protocol = "tcp"
                 }
             ]
@@ -44,8 +44,8 @@ resource "aws_security_group" "ecs_service" {
     vpc_id = data.aws_vpc.default.id
 
     ingress {
-        from_port = 5000
-        to_port = 5000
+        from_port = 8000
+        to_port = 8000
         protocol = "tcp"
         cidr_blocks = ["0.0.0.0/0"]
     }

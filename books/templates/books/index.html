@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>蔵書管理 — Library</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #f0f2f5;
+            color: #333;
+            min-height: 100vh;
+        }
+
+        /* ---- トップバー ---- */
+        .top-bar {
+            background: #fff;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .top-bar h1 {
+            font-size: 1.05rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            flex: 1;
+            color: #222;
+        }
+
+        /* ---- ボタン共通 ---- */
+        .btn {
+            padding: 7px 16px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            background: #fff;
+            color: #333;
+            transition: background 0.12s, border-color 0.12s;
+            white-space: nowrap;
+        }
+        .btn:hover { background: #f0f0f0; }
+
+        #btn-edit {
+            background: #4a90e2;
+            color: #fff;
+            border-color: #4a90e2;
+        }
+        #btn-edit:hover { background: #357abd; border-color: #357abd; }
+
+        #btn-save {
+            display: none;
+            background: #27ae60;
+            color: #fff;
+            border-color: #27ae60;
+        }
+        #btn-save:hover { background: #219a52; }
+        body.edit-mode #btn-save { display: inline-block; }
+
+        body.edit-mode #btn-edit {
+            background: #e8e8e8;
+            color: #555;
+            border-color: #bbb;
+        }
+
+        /* ---- メインエリア ---- */
+        .main { padding: 24px; }
+
+        .table-wrap {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+        thead th {
+            background: #f7f8fa;
+            padding: 10px 14px;
+            text-align: left;
+            border-bottom: 2px solid #e0e0e0;
+            font-weight: 700;
+            font-size: 0.78rem;
+            letter-spacing: 0.06em;
+            white-space: nowrap;
+            color: #555;
+        }
+        tbody td {
+            padding: 7px 14px;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: middle;
+        }
+        tbody tr:last-child td { border-bottom: none; }
+        tbody tr:hover { background: #fafbfc; }
+
+        .col-id        { width: 56px; }
+        .col-title     { min-width: 160px; }
+        .col-author    { min-width: 120px; }
+        .col-publisher { min-width: 130px; }
+        .col-note      { min-width: 200px; }
+        .col-status    { width: 120px; }
+
+        /* STATUS バッジ */
+        .status-badge {
+            display: inline-block;
+            padding: 2px 9px;
+            border-radius: 10px;
+            font-size: 0.76rem;
+            font-weight: 500;
+            background: #eef0f3;
+            color: #555;
+        }
+
+        /* ---- 編集モード制御 ---- */
+        .edit-cell { display: none; }
+        body.edit-mode .view-cell { display: none; }
+        body.edit-mode .edit-cell { display: block; }
+
+        input.edit-cell,
+        select.edit-cell {
+            width: 100%;
+            padding: 5px 8px;
+            border: 1px solid #c8c8c8;
+            border-radius: 3px;
+            font-size: 0.85rem;
+            color: #333;
+            background: #fff;
+        }
+        textarea.edit-cell {
+            width: 100%;
+            padding: 5px 8px;
+            border: 1px solid #c8c8c8;
+            border-radius: 3px;
+            font-size: 0.85rem;
+            color: #333;
+            resize: vertical;
+            min-height: 52px;
+        }
+        input.edit-cell:focus,
+        select.edit-cell:focus,
+        textarea.edit-cell:focus {
+            outline: none;
+            border-color: #4a90e2;
+            box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.18);
+        }
+
+        /* 行追加ボタン */
+        #btn-add-row {
+            display: none;
+            margin-top: 12px;
+        }
+        body.edit-mode #btn-add-row { display: inline-block; }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <h1>Library — 蔵書管理</h1>
+        <button class="btn" id="btn-save" onclick="saveBooks()">保存</button>
+        <button class="btn" id="btn-edit" onclick="toggleEditMode()">編集モード</button>
+        <a href="{% url 'logout' %}"><button class="btn">ログアウト</button></a>
+    </div>
+
+    <div class="main">
+        <div class="table-wrap">
+            <table id="book-table">
+                <thead>
+                    <tr>
+                        <th class="col-id">ID</th>
+                        <th class="col-title">TITLE</th>
+                        <th class="col-author">AUTHOR</th>
+                        <th class="col-publisher">PUBLISHER</th>
+                        <th class="col-note">NOTE</th>
+                        <th class="col-status">STATUS</th>
+                    </tr>
+                </thead>
+                <tbody id="book-tbody">
+                    {% if books %}
+                        {% for book in books %}
+                        <tr data-id="{{ book.id }}">
+                            <td>
+                                <span class="view-cell">{{ book.id }}</span>
+                            </td>
+                            <td>
+                                <span class="view-cell">{{ book.title }}</span>
+                                <input class="edit-cell" type="text" value="{{ book.title }}" data-field="title">
+                            </td>
+                            <td>
+                                <span class="view-cell">{{ book.author }}</span>
+                                <input class="edit-cell" type="text" value="{{ book.author }}" data-field="author">
+                            </td>
+                            <td>
+                                <span class="view-cell">{{ book.publisher|default:'' }}</span>
+                                <input class="edit-cell" type="text" value="{{ book.publisher|default:'' }}" data-field="publisher">
+                            </td>
+                            <td>
+                                <span class="view-cell" style="white-space: pre-wrap;">{{ book.note|default:'' }}</span>
+                                <textarea class="edit-cell" data-field="note">{{ book.note|default:'' }}</textarea>
+                            </td>
+                            <td>
+                                <span class="view-cell">
+                                    {% if book.status %}
+                                        <span class="status-badge">{{ book.get_status_display }}</span>
+                                    {% endif %}
+                                </span>
+                                <select class="edit-cell" data-field="status">
+                                    <option value="">---</option>
+                                    {% for val, label in status_choices %}
+                                        <option value="{{ val }}"{% if book.status == val %} selected{% endif %}>{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                        <tr data-id="">
+                            <td><span class="view-cell"></span></td>
+                            <td>
+                                <span class="view-cell"></span>
+                                <input class="edit-cell" type="text" value="" data-field="title">
+                            </td>
+                            <td>
+                                <span class="view-cell"></span>
+                                <input class="edit-cell" type="text" value="" data-field="author">
+                            </td>
+                            <td>
+                                <span class="view-cell"></span>
+                                <input class="edit-cell" type="text" value="" data-field="publisher">
+                            </td>
+                            <td>
+                                <span class="view-cell"></span>
+                                <textarea class="edit-cell" data-field="note"></textarea>
+                            </td>
+                            <td>
+                                <span class="view-cell"></span>
+                                <select class="edit-cell" data-field="status">
+                                    <option value="">---</option>
+                                    {% for val, label in status_choices %}
+                                        <option value="{{ val }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+        <button class="btn" id="btn-add-row" onclick="addRow()">＋ 行を追加</button>
+    </div>
+
+    <script>
+        // STATUS 選択肢（行追加時に使用）
+        const statusOptions = [
+            {value: '', label: '---'},
+            {% for val, label in status_choices %}{value: '{{ val }}', label: '{{ label }}'},
+            {% endfor %}
+        ];
+
+        function toggleEditMode() {
+            const isEditing = document.body.classList.toggle('edit-mode');
+            document.getElementById('btn-edit').textContent = isEditing ? '編集モード（解除）' : '編集モード';
+        }
+
+        function addRow() {
+            const options = statusOptions
+                .map(o => `<option value="${escHtml(o.value)}">${escHtml(o.label)}</option>`)
+                .join('');
+            const tr = document.createElement('tr');
+            tr.setAttribute('data-id', '');
+            tr.innerHTML = `
+                <td><span class="view-cell"></span></td>
+                <td>
+                    <span class="view-cell"></span>
+                    <input class="edit-cell" type="text" value="" data-field="title">
+                </td>
+                <td>
+                    <span class="view-cell"></span>
+                    <input class="edit-cell" type="text" value="" data-field="author">
+                </td>
+                <td>
+                    <span class="view-cell"></span>
+                    <input class="edit-cell" type="text" value="" data-field="publisher">
+                </td>
+                <td>
+                    <span class="view-cell"></span>
+                    <textarea class="edit-cell" data-field="note"></textarea>
+                </td>
+                <td>
+                    <span class="view-cell"></span>
+                    <select class="edit-cell" data-field="status">${options}</select>
+                </td>
+            `;
+            document.getElementById('book-tbody').appendChild(tr);
+        }
+
+        function saveBooks() {
+            const books = [];
+            document.querySelectorAll('#book-tbody tr').forEach(row => {
+                const id = row.getAttribute('data-id') || null;
+                const fields = {};
+                row.querySelectorAll('.edit-cell').forEach(el => {
+                    fields[el.getAttribute('data-field')] = el.value;
+                });
+                books.push({
+                    id: id ? parseInt(id) : null,
+                    title: fields.title || '',
+                    author: fields.author || '',
+                    publisher: fields.publisher || '',
+                    note: fields.note || '',
+                    status: fields.status || '',
+                });
+            });
+
+            fetch('/save/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'),
+                },
+                body: JSON.stringify({ books }),
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'ok') {
+                    window.location.reload();
+                } else {
+                    alert('保存に失敗しました: ' + (data.message || ''));
+                }
+            })
+            .catch(() => alert('保存中にエラーが発生しました。'));
+        }
+
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return '';
+        }
+
+        function escHtml(str) {
+            return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+    </script>
+</body>
+</html>
