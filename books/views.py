@@ -50,3 +50,17 @@ def save_books(request):
             )
 
     return JsonResponse({'status': 'ok'})
+
+
+@login_required
+@require_POST
+def delete_books(request):
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
+
+    ids = [int(i) for i in data.get('ids', []) if i]
+    if ids:
+        Book.objects.filter(id__in=ids).delete()
+    return JsonResponse({'status': 'ok'})
