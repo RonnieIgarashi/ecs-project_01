@@ -171,7 +171,6 @@ input[type="checkbox"].edit-cell {
     cursor: pointer;
     accent-color: #7B5230;
     transform: scale(1.3);
-    display: block;
     margin: 0 auto;
 }
 

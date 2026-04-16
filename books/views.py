@@ -11,6 +11,11 @@ def health(request):
 
 
 @login_required
+def infra(request):
+    return render(request, 'books/infra.html')
+
+
+@login_required
 def index(request):
     books = list(Book.objects.all())
     return render(request, 'books/index.html', {

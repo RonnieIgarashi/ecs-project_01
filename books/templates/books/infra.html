@@ -1,0 +1,238 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infrastructure — ECS × Terraform</title>
+    <link rel="stylesheet" href="{% static 'books/index.css' %}">
+    <style>
+        .infra-wrap {
+            max-width: 1100px;
+            margin: 32px auto;
+            padding: 0 24px 60px;
+        }
+        .infra-header {
+            margin-bottom: 20px;
+        }
+        .infra-header h2 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #222;
+            margin-bottom: 6px;
+        }
+        .infra-header p {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        /* 構成図 */
+        .diagram-container {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 24px;
+            text-align: center;
+        }
+        .diagram-container img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+
+        /* セクション共通 */
+        .section {
+            margin-top: 36px;
+        }
+        .section-title {
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            color: #888;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        /* 構築技術テーブル */
+        .tech-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .tech-table th {
+            background: #f7f8fa;
+            padding: 9px 16px;
+            text-align: left;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #555;
+            letter-spacing: 0.05em;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        .tech-table td {
+            padding: 9px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            color: #333;
+        }
+        .tech-table tr:last-child td { border-bottom: none; }
+        .tech-table tr:hover td { background: #fafbfc; }
+        .tech-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background: #f0ece8;
+            color: #7B5230;
+        }
+
+        /* Terraformファイル構成 */
+        .tf-structure {
+            background: #1e1e2e;
+            border-radius: 6px;
+            padding: 20px 24px;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 0.83rem;
+            line-height: 1.8;
+            color: #cdd6f4;
+            overflow-x: auto;
+            white-space: pre;
+        }
+        .tf-dir  { color: #89b4fa; font-weight: 600; }
+        .tf-file { color: #a6e3a1; }
+        .tf-comment { color: #6c7086; margin-left: 8px; }
+
+        /* GitHubリンク */
+        .github-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            background: #fff;
+            color: #333;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: background 0.12s, border-color 0.12s;
+        }
+        .github-link:hover {
+            background: #f0f0f0;
+            border-color: #999;
+        }
+        .github-link svg {
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <h1>Library — 蔵書管理</h1>
+        <a href="{% url 'index' %}"><button class="btn">蔵書一覧</button></a>
+        <button class="btn" style="background:#7B5230;color:#fff;border-color:#7B5230;" disabled>構成図</button>
+        <a href="{% url 'logout' %}"><button class="btn">ログアウト</button></a>
+    </div>
+
+    <div class="infra-wrap">
+        <div class="infra-header">
+            <h2>Infrastructure — ECS × Terraform</h2>
+            <p>AWS ECS（Fargate）+ Terraform によるコンテナインフラ構成図</p>
+        </div>
+
+        <!-- 構成図 -->
+        <div class="diagram-container">
+            <img src="{% static 'books/infra.svg' %}" alt="ECS × Terraform インフラ構成図">
+        </div>
+
+        <!-- 構築技術 -->
+        <div class="section">
+            <div class="section-title">使用技術</div>
+            <table class="tech-table">
+                <thead>
+                    <tr>
+                        <th>レイヤー</th>
+                        <th>技術</th>
+                        <th>概要</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>IaC</td>
+                        <td><span class="tech-badge">Terraform</span></td>
+                        <td>全AWSリソースをコードで管理（terraform apply / destroy）</td>
+                    </tr>
+                    <tr>
+                        <td>コンテナ基盤</td>
+                        <td><span class="tech-badge">AWS ECS (Fargate)</span></td>
+                        <td>サーバーレス起動。Auto Scalingによるタスク増減</td>
+                    </tr>
+                    <tr>
+                        <td>イメージ管理</td>
+                        <td><span class="tech-badge">Amazon ECR</span></td>
+                        <td>DockerイメージのプライベートレジストリをTerraformで構築</td>
+                    </tr>
+                    <tr>
+                        <td>ロードバランサー</td>
+                        <td><span class="tech-badge">ALB</span></td>
+                        <td>Application Load Balancer。ECSタスクへのルーティング</td>
+                    </tr>
+                    <tr>
+                        <td>データベース</td>
+                        <td><span class="tech-badge">Amazon Aurora</span></td>
+                        <td>マネージドRDB。マルチAZへの自動バックアップ対応</td>
+                    </tr>
+                    <tr>
+                        <td>ログ管理</td>
+                        <td><span class="tech-badge">CloudWatch Logs</span></td>
+                        <td>コンテナログを自動収集。保持期間はTerraformで定義</td>
+                    </tr>
+                    <tr>
+                        <td>アプリケーション</td>
+                        <td><span class="tech-badge">Django (Python)</span></td>
+                        <td>蔵書管理WebアプリをDockerコンテナとして稼働</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Terraformファイル構成 -->
+        <div class="section">
+            <div class="section-title">Terraform構成</div>
+            <div class="tf-structure">
+<span class="tf-dir">terraform/</span>
+├── <span class="tf-file">main.tf</span>        <span class="tf-comment"># VPC・サブネット（data source）</span>
+├── <span class="tf-file">variables.tf</span>   <span class="tf-comment"># project_name / aws_region / vpc_id / subnet_ids</span>
+├── <span class="tf-file">iam.tf</span>         <span class="tf-comment"># ECSタスク実行ロール</span>
+├── <span class="tf-file">ecr.tf</span>         <span class="tf-comment"># ECRリポジトリ</span>
+├── <span class="tf-file">ecs.tf</span>         <span class="tf-comment"># ECSクラスタ・タスク定義・セキュリティグループ・サービス</span>
+└── <span class="tf-file">cloudwatch.tf</span>  <span class="tf-comment"># ロググループ（保持期間 7日）</span>
+            </div>
+        </div>
+
+        <!-- GitHubリンク -->
+        <div class="section">
+            <a class="github-link" href="https://github.com/RonnieIgarashi/ecs-project_01" target="_blank" rel="noopener">
+                <svg height="20" viewBox="0 0 16 16" width="20" fill="currentColor">
+                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+                    0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13
+                    -.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66
+                    .07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15
+                    -.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27
+                    .68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12
+                    .51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48
+                    0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                </svg>
+                View on GitHub — RonnieIgarashi/ecs-project_01
+            </a>
+        </div>
+    </div>
+</body>
+</html>
