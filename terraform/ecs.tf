@@ -45,6 +45,9 @@ resource "aws_ecs_task_definition" "app" {
                 {name = "DB_NAME", value = "ecs_prj_library_db"},
                 {name = "DB_USER", value = "postgres"},
                 {name = "DB_PASSWORD", value = var.db_password},
+                {name = "DJANGO_SUPERUSER_USERNAME", value = "odinstark"},
+                {name = "DJANGO_SUPERUSER_EMAIL", value = "ronnioigaarashi2@gmail.com"},
+                {name = "DJANGO_SUPERUSER_PASSWORD", value = var.superuser_password},
             ]
         }
     ])

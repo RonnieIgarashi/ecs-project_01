@@ -25,3 +25,9 @@ variable "secret_key" {
     type        = string
     sensitive   = true
 }
+
+variable "superuser_password" {
+    description = "Django superuser パスワード（terraform.tfvars で指定）"
+    type        = string
+    sensitive   = true
+}
