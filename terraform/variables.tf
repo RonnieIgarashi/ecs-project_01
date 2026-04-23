@@ -13,3 +13,15 @@ variable "vpc_id" {
 variable "subnet_ids" {
     default = ["subnet-482fc763", "subnet-3d3edf75"]
 }
+
+variable "db_password" {
+    description = "Aurora PostgreSQL マスターパスワード（terraform.tfvars で指定）"
+    type        = string
+    sensitive   = true
+}
+
+variable "secret_key" {
+    description = "Django SECRET_KEY（terraform.tfvars で指定）"
+    type        = string
+    sensitive   = true
+}

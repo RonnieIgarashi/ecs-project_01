@@ -35,6 +35,17 @@ resource "aws_ecs_task_definition" "app" {
                     awslogs-stream-prefix = "ecs"
                 }
             }
+
+            environment = [
+                {name = "DEBUG", value = "False"},
+                {name = "ALLOWED_HOSTS", value = "*"},
+                {name = "SECRET_KEY", value = var.secret_key},
+                {name = "DB_HOST", value = aws_rds_cluster.postgres.endpoint},
+                {name ="DB_PORT", value = "5432"},
+                {name = "DB_NAME", value = "ecs_prj_library_db"},
+                {name = "DB_USER", value = "postgres"},
+                {name = "DB_PASSWORD", value = var.db_password},
+            ]
         }
     ])
 }
@@ -58,18 +69,18 @@ resource "aws_security_group" "ecs_service" {
     }
 }
 
-# フェーズ2（docker push後）に解除
-# resource "aws_ecs_service" "app" {
-#     name = "${var.project_name}-service"
-#     cluster = aws_ecs_cluster.main.id
-#     task_definition = aws_ecs_task_definition.app.arn
-#
-#     launch_type = "FARGATE"
-#     desired_count = 1
-#
-#     network_configuration {
-#         subnets = data.aws_subnets.default.ids
-#         security_groups = [aws_security_group.ecs_service.id]
-#         assign_public_ip = true
-#     }
-# }
+resource "aws_ecs_service" "app" {
+    name = "${var.project_name}-service"
+    cluster = aws_ecs_cluster.main.id
+    task_definition = aws_ecs_task_definition.app.arn
+    depends_on = [aws_rds_cluster_instance.postgres]
+
+    launch_type = "FARGATE"
+    desired_count = 1
+
+    network_configuration {
+        subnets = data.aws_subnets.default.ids
+        security_groups = [aws_security_group.ecs_service.id]
+        assign_public_ip = true
+    }
+}
