@@ -14,7 +14,10 @@
         <button class="btn" id="btn-save" onclick="saveBooks()">保存</button>
         <button class="btn" id="btn-edit" onclick="toggleEditMode()">編集モード</button>
         <a href="{% url 'infra' %}"><button class="btn">構成図</button></a>
-        <a href="{% url 'logout' %}"><button class="btn">ログアウト</button></a>
+        <form method="post" action="{% url 'logout' %}" style="display:inline;" onsubmit="return confirm('ログアウトしますか？');">
+            {% csrf_token %}
+            <button type="submit" class="btn">ログアウト</button>
+        </form>
     </div>
 
     <div id="delete-modal" class="modal-overlay">
