@@ -61,7 +61,8 @@ resource "aws_security_group" "ecs_service" {
         from_port = 8000
         to_port = 8000
         protocol = "tcp"
-        cidr_blocks = ["0.0.0.0/0"]
+        # cidr_blocks = ["0.0.0.0/0"]
+        security_groups = [aws_security_group.alb.id]
     }
 
     egress {
@@ -76,10 +77,20 @@ resource "aws_ecs_service" "app" {
     name = "${var.project_name}-service"
     cluster = aws_ecs_cluster.main.id
     task_definition = aws_ecs_task_definition.app.arn
-    depends_on = [aws_rds_cluster_instance.postgres]
+    depends_on = [
+        aws_rds_cluster_instance.postgres,
+        aws_lb_listner.http,
+        ]
 
     launch_type = "FARGATE"
     desired_count = 1
+
+    # ALBとECSサービスの紐づけ
+    load_balancer {
+        target_group_arn = aws_lb_target_group.app.arn
+        container_name = "django"
+        container_port = 8000
+    }
 
     network_configuration {
         subnets = data.aws_subnets.default.ids

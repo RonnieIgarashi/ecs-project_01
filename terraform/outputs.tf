@@ -11,3 +11,8 @@ output "aurora_endpoint" {
     description = "Aurora クラスターエンドポイント（接続確認用）"
     value       = aws_rds_cluster.postgres.endpoint
 }
+
+output "alb_dns_name" {
+    description = "ALB DNS 名"
+    value = "http://${aws_lb.main.dns_name}"
+}
